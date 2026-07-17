@@ -7,6 +7,7 @@ import type { Comment } from './types'
 function App() {
   const [comments, setComments] = useState<Comment[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [lastAddedId, setLastAddedId] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -24,8 +25,14 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (lastAddedId === null) return
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+  }, [lastAddedId])
+
   function handleAdded(comment: Comment) {
     setComments((prev) => [...(prev ?? []), comment])
+    setLastAddedId(comment.id)
   }
 
   function handleUpdated(updated: Comment) {
@@ -37,19 +44,21 @@ function App() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="text-2xl font-semibold text-gray-900">Comments</h1>
+    <>
+      <div className="mx-auto max-w-2xl px-4 py-10 pb-28">
+        <h1 className="text-2xl font-semibold text-gray-900">Comments</h1>
+
+        {error && <p className="py-8 text-center text-red-600">Failed to load comments: {error}</p>}
+        {!error && comments === null && (
+          <p className="py-8 text-center text-gray-400">Loading comments…</p>
+        )}
+        {!error && comments !== null && (
+          <CommentList comments={comments} onUpdated={handleUpdated} onDeleted={handleDeleted} />
+        )}
+      </div>
 
       <AddComment onAdded={handleAdded} />
-
-      {error && <p className="py-8 text-center text-red-600">Failed to load comments: {error}</p>}
-      {!error && comments === null && (
-        <p className="py-8 text-center text-gray-400">Loading comments…</p>
-      )}
-      {!error && comments !== null && (
-        <CommentList comments={comments} onUpdated={handleUpdated} onDeleted={handleDeleted} />
-      )}
-    </div>
+    </>
   )
 }
 
